@@ -60,22 +60,38 @@ module Alchemy
         PageDefinition.reset!
       end
 
-      context "with a page using url_pattern" do
+      # Mirrors the user's real-world scenario:
+      #   Products (product_overview)        → /products
+      #   └── Product Details (product_detail, url_pattern: ":id")
+      #                                      → /products/:id
+      #       └── Comments (standard)        → /products/:id/comments
+      context "with a parent page and a child using url_pattern (replaces slug)" do
         let!(:products_page) do
           create(
             :alchemy_page,
             :public,
             name: "Products",
-            page_layout: "product_detail",
+            page_layout: "standard",
             parent: language_root,
             language: language
           )
         end
 
-        it "matches a path with a valid integer segment" do
+        let!(:product_detail_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Product Details",
+            page_layout: "product_detail",
+            parent: products_page,
+            language: language
+          )
+        end
+
+        it "matches /products/123 to the product detail page" do
           result = described_class.find_match("products/123", language: language)
           expect(result).to be_present
-          expect(result[:page]).to eq(products_page)
+          expect(result[:page]).to eq(product_detail_page)
           expect(result[:params][:id]).to eq("123")
         end
 
@@ -84,7 +100,7 @@ module Alchemy
           expect(result).to be_nil
         end
 
-        it "does not match a path that doesn't start with the page urlname" do
+        it "does not match a path with a different prefix" do
           result = described_class.find_match("other/123", language: language)
           expect(result).to be_nil
         end
@@ -95,14 +111,25 @@ module Alchemy
         end
       end
 
-      context "with a multi-segment pattern" do
+      context "with a multi-segment pattern that replaces slug" do
         let!(:blog_page) do
           create(
             :alchemy_page,
             :public,
             name: "Blog",
-            page_layout: "blog_post",
+            page_layout: "standard",
             parent: language_root,
+            language: language
+          )
+        end
+
+        let!(:blog_post_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Blog Post",
+            page_layout: "blog_post",
+            parent: blog_page,
             language: language
           )
         end
@@ -110,7 +137,7 @@ module Alchemy
         it "matches and extracts multiple named segments" do
           result = described_class.find_match("blog/2024/my-post", language: language)
           expect(result).to be_present
-          expect(result[:page]).to eq(blog_page)
+          expect(result[:page]).to eq(blog_post_page)
           expect(result[:params][:year]).to eq("2024")
           expect(result[:params][:slug]).to eq("my-post")
         end
@@ -121,14 +148,25 @@ module Alchemy
         end
       end
 
-      context "with a pattern containing static segments" do
+      context "with a pattern containing static segments that replaces slug" do
         let!(:users_page) do
           create(
             :alchemy_page,
             :public,
             name: "Users",
-            page_layout: "user_profile",
+            page_layout: "standard",
             parent: language_root,
+            language: language
+          )
+        end
+
+        let!(:user_profile_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "User Profile",
+            page_layout: "user_profile",
+            parent: users_page,
             language: language
           )
         end
@@ -137,7 +175,7 @@ module Alchemy
           uuid = "550e8400-e29b-41d4-a716-446655440000"
           result = described_class.find_match("users/#{uuid}/profile", language: language)
           expect(result).to be_present
-          expect(result[:page]).to eq(users_page)
+          expect(result[:page]).to eq(user_profile_page)
           expect(result[:params][:uuid]).to eq(uuid)
         end
 
@@ -148,14 +186,25 @@ module Alchemy
         end
       end
 
-      context "with hierarchical patterns (child page under pattern page)" do
+      context "with hierarchical patterns (grandchild under pattern page)" do
         let!(:products_page) do
           create(
             :alchemy_page,
             :public,
             name: "Products",
-            page_layout: "product_detail",
+            page_layout: "standard",
             parent: language_root,
+            language: language
+          )
+        end
+
+        let!(:product_detail_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Product Details",
+            page_layout: "product_detail",
+            parent: products_page,
             language: language
           )
         end
@@ -166,12 +215,12 @@ module Alchemy
             :public,
             name: "Comments",
             page_layout: "standard",
-            parent: products_page,
+            parent: product_detail_page,
             language: language
           )
         end
 
-        it "matches a child page URL with the parent's pattern segment" do
+        it "matches a grandchild page URL with the parent's pattern segment" do
           result = described_class.find_match("products/42/comments", language: language)
           expect(result).to be_present
           expect(result[:page]).to eq(comments_page)
@@ -190,26 +239,36 @@ module Alchemy
             :alchemy_page,
             :public,
             name: "Products",
-            page_layout: "product_detail",
+            page_layout: "standard",
             parent: language_root,
+            language: language
+          )
+        end
+
+        let!(:product_detail_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Product Details",
+            page_layout: "product_detail",
+            parent: products_page,
             language: language
           )
         end
 
         it "is not called because exact match takes priority in the controller" do
           # The exact match is handled in the controller before calling find_match.
-          # This test documents that find_match itself would still match,
-          # but the controller won't call it when an exact match exists.
+          # This test documents that the controller won't call find_match
+          # when an exact urlname match exists.
           exact_page = create(
             :alchemy_page,
             :public,
             name: "Special Product",
             page_layout: "standard",
-            parent: products_page,
+            parent: product_detail_page,
             language: language
           )
 
-          # The exact page has urlname "products/special-product"
           exact_result = language.pages.contentpages.find_by(
             urlname: exact_page.urlname,
             language_code: language.code

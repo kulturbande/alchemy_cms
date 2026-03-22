@@ -263,21 +263,36 @@ module Alchemy
         PageDefinition.reset!
       end
 
-      context "with a page layout that has url_pattern" do
+      # Products (standard)        → /products
+      # └── Product Details (product_detail, url_pattern: ":id")
+      #                            → /products/:id
+      #     └── Comments (standard) → /products/:id/comments
+      context "with a child page that has url_pattern (replaces slug)" do
         let!(:products_page) do
           create(
             :alchemy_page,
             :public,
             name: "Products",
-            page_layout: "product_detail",
+            page_layout: "standard",
             parent: default_language_root,
+            language: default_language
+          )
+        end
+
+        let!(:product_detail_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Product Details",
+            page_layout: "product_detail",
+            parent: products_page,
             language: default_language
           )
         end
 
         it "matches a dynamic path and sets params" do
           get :show, params: {urlname: "products/42"}
-          expect(assigns(:page)).to eq(products_page)
+          expect(assigns(:page)).to eq(product_detail_page)
           expect(controller.params[:id]).to eq("42")
         end
 
@@ -294,8 +309,19 @@ module Alchemy
             :alchemy_page,
             :public,
             name: "Products",
-            page_layout: "product_detail",
+            page_layout: "standard",
             parent: default_language_root,
+            language: default_language
+          )
+        end
+
+        let!(:product_detail_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Product Details",
+            page_layout: "product_detail",
+            parent: products_page,
             language: default_language
           )
         end
@@ -306,7 +332,7 @@ module Alchemy
             :public,
             name: "Featured",
             page_layout: "standard",
-            parent: products_page,
+            parent: product_detail_page,
             language: default_language
           )
         end
@@ -317,14 +343,25 @@ module Alchemy
         end
       end
 
-      context "with hierarchical patterns (child under pattern page)" do
+      context "with hierarchical patterns (grandchild under pattern page)" do
         let!(:products_page) do
           create(
             :alchemy_page,
             :public,
             name: "Products",
-            page_layout: "product_detail",
+            page_layout: "standard",
             parent: default_language_root,
+            language: default_language
+          )
+        end
+
+        let!(:product_detail_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Product Details",
+            page_layout: "product_detail",
+            parent: products_page,
             language: default_language
           )
         end
@@ -335,12 +372,12 @@ module Alchemy
             :public,
             name: "Comments",
             page_layout: "standard",
-            parent: products_page,
+            parent: product_detail_page,
             language: default_language
           )
         end
 
-        it "matches a child page with parent's pattern segment" do
+        it "matches a grandchild page with parent's pattern segment" do
           get :show, params: {urlname: "products/42/comments"}
           expect(assigns(:page)).to eq(comments_page)
           expect(controller.params[:id]).to eq("42")

@@ -3,10 +3,11 @@
 module Alchemy
   # Matches request paths against pages with URL patterns defined in their page layout.
   #
-  # URL patterns allow pages to match dynamic path segments. For example, a page
-  # with urlname "products" and url_pattern ":id" will match "/products/123".
+  # URL patterns allow pages to match dynamic path segments. The url_pattern
+  # replaces the page's own slug in the URL. For example, a "Product Details"
+  # page (child of "Products") with url_pattern ":product_id" will match
+  # "/products/:product_id" instead of "/products/product-details".
   #
-  # Patterns are relative to the page's position in the tree (its urlname).
   # Named segments are extracted and returned as a params hash.
   #
   # Patterns compose hierarchically: if a parent page has a url_pattern,
@@ -123,14 +124,16 @@ module Alchemy
 
       # Builds the full URL pattern for a page by walking up the ancestor chain.
       #
-      # For each ancestor, if its layout defines a url_pattern, that pattern
-      # replaces the page's own slug in the URL. Static slugs are kept as-is.
+      # For each page in the chain, if its layout defines a url_pattern, the
+      # pattern REPLACES that page's slug in the URL. Static slugs are kept as-is.
       #
       # Example:
-      #   Products (urlname: "products", url_pattern: ":id")
-      #     └── Comments (urlname: "products/comments")
+      #   Products (page_layout: "product_overview")
+      #     └── Product Details (page_layout: "product_detail", url_pattern: ":product_id")
+      #         └── Comments (page_layout: "comment_overview")
       #
-      #   Full pattern for Comments: "products/:id/comments"
+      #   Full pattern for Product Details: "products/:product_id"
+      #   Full pattern for Comments:        "products/:product_id/comments"
       #
       def build_full_pattern(page)
         segments = []
@@ -144,7 +147,7 @@ module Alchemy
 
           if pattern.present?
             has_any_pattern = true
-            segments << ancestor.slug
+            # The url_pattern replaces the page's slug in the URL
             segments << pattern
           else
             segments << ancestor.slug

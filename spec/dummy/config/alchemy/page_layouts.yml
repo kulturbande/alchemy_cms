@@ -61,8 +61,7 @@
 
 - name: product_detail
   url_pattern: ":id"
-  url_constraints:
-    id: "integer"
+  url_constraints: integer
   elements: [article]
 
 - name: user_profile

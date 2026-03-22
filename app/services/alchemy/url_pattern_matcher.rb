@@ -166,10 +166,36 @@ module Alchemy
         page_chain(page).each do |ancestor|
           definition = PageDefinition.get(ancestor.page_layout)
           if definition&.url_pattern.present?
-            constraints.merge!(definition.url_constraints || {})
+            constraints.merge!(
+              normalize_constraints(definition.url_constraints, definition.url_pattern)
+            )
           end
         end
         constraints
+      end
+
+      # Normalizes url_constraints into a Hash.
+      #
+      # Supports two formats:
+      #
+      #   # Shorthand: applies the constraint to all named segments
+      #   url_constraints: integer
+      #
+      #   # Hash: maps each segment name to its constraint type
+      #   url_constraints:
+      #     id: integer
+      #     slug: string
+      #
+      def normalize_constraints(constraints, pattern)
+        case constraints
+        when Hash
+          constraints
+        when String
+          segment_names = pattern.scan(NAMED_SEGMENT_REGEX).flatten
+          segment_names.each_with_object({}) { |name, hash| hash[name] = constraints }
+        else
+          {}
+        end
       end
 
       # Returns the chain of pages from the language root's child down to this page.

@@ -49,6 +49,28 @@ module Alchemy
       end
     end
 
+    describe ".normalize_constraints" do
+      it "returns a hash as-is" do
+        result = described_class.send(:normalize_constraints, {"id" => "integer"}, ":id")
+        expect(result).to eq({"id" => "integer"})
+      end
+
+      it "maps a string shorthand to all named segments" do
+        result = described_class.send(:normalize_constraints, "integer", ":id")
+        expect(result).to eq({"id" => "integer"})
+      end
+
+      it "maps a string shorthand to multiple named segments" do
+        result = described_class.send(:normalize_constraints, "string", ":year/:slug")
+        expect(result).to eq({"year" => "string", "slug" => "string"})
+      end
+
+      it "returns an empty hash for nil" do
+        result = described_class.send(:normalize_constraints, nil, ":id")
+        expect(result).to eq({})
+      end
+    end
+
     describe ".find_match" do
       let(:language) { create(:alchemy_language) }
       let!(:language_root) do

@@ -257,5 +257,95 @@ module Alchemy
         end
       end
     end
+
+    describe "URL pattern matching" do
+      before do
+        PageDefinition.reset!
+      end
+
+      context "with a page layout that has url_pattern" do
+        let!(:products_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Products",
+            page_layout: "product_detail",
+            parent: default_language_root,
+            language: default_language
+          )
+        end
+
+        it "matches a dynamic path and sets params" do
+          get :show, params: {urlname: "products/42"}
+          expect(assigns(:page)).to eq(products_page)
+          expect(controller.params[:id]).to eq("42")
+        end
+
+        it "renders 404 when constraint does not match" do
+          expect {
+            get :show, params: {urlname: "products/not-a-number"}
+          }.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      context "exact page match takes priority over pattern" do
+        let!(:products_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Products",
+            page_layout: "product_detail",
+            parent: default_language_root,
+            language: default_language
+          )
+        end
+
+        let!(:child_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Featured",
+            page_layout: "standard",
+            parent: products_page,
+            language: default_language
+          )
+        end
+
+        it "loads the exact page match, not the pattern match" do
+          get :show, params: {urlname: child_page.urlname}
+          expect(assigns(:page)).to eq(child_page)
+        end
+      end
+
+      context "with hierarchical patterns (child under pattern page)" do
+        let!(:products_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Products",
+            page_layout: "product_detail",
+            parent: default_language_root,
+            language: default_language
+          )
+        end
+
+        let!(:comments_page) do
+          create(
+            :alchemy_page,
+            :public,
+            name: "Comments",
+            page_layout: "standard",
+            parent: products_page,
+            language: default_language
+          )
+        end
+
+        it "matches a child page with parent's pattern segment" do
+          get :show, params: {urlname: "products/42/comments"}
+          expect(assigns(:page)).to eq(comments_page)
+          expect(controller.params[:id]).to eq("42")
+        end
+      end
+    end
   end
 end

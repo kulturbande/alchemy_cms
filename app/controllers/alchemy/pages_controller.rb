@@ -130,6 +130,18 @@ module Alchemy
         urlname: params[:urlname],
         language_code: params[:locale] || Current.language.code
       )
+
+      if @page.nil?
+        result = Alchemy::UrlPatternMatcher.find_match(
+          params[:urlname],
+          language: Current.language
+        )
+        if result
+          @page = result[:page]
+          result[:params].each { |key, value| params[key] = value }
+        end
+      end
+
       Current.page = @page
     end
 

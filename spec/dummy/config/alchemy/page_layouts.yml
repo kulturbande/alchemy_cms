@@ -59,5 +59,24 @@
     - menu
   layoutpage: true
 
+- name: product_detail
+  url_pattern: ":id"
+  url_constraints:
+    id: "integer"
+  elements: [article]
+
+- name: user_profile
+  url_pattern: ":uuid/profile"
+  url_constraints:
+    uuid: "uuid"
+  elements: [article]
+
+- name: blog_post
+  url_pattern: ":year/:slug"
+  url_constraints:
+    year: "integer"
+    slug: "string"
+  elements: [article]
+
 - name: <%= 'erb_' + 'layout' %>
   unique: true

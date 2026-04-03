@@ -52,4 +52,45 @@ RSpec.describe Alchemy::Configurations::FormatMatchers do
       expect("relative/path").not_to match(format_matchers.link_url)
     end
   end
+
+  describe "#integer" do
+    it "matches integers" do
+      expect("123").to match(format_matchers.integer)
+      expect("0").to match(format_matchers.integer)
+    end
+
+    it "does not match non-integers" do
+      expect("12.3").not_to match(format_matchers.integer)
+      expect("abc").not_to match(format_matchers.integer)
+      expect("12a").not_to match(format_matchers.integer)
+    end
+  end
+
+  describe "#string" do
+    it "matches any non-slash string" do
+      expect("hello-world").to match(format_matchers.string)
+      expect("some_slug").to match(format_matchers.string)
+      expect("123").to match(format_matchers.string)
+    end
+
+    it "does not match strings containing slashes" do
+      expect("hello/world").not_to match(format_matchers.string)
+    end
+
+    it "does not match empty strings" do
+      expect("").not_to match(format_matchers.string)
+    end
+  end
+
+  describe "#uuid" do
+    it "matches valid UUIDs" do
+      expect("550e8400-e29b-41d4-a716-446655440000").to match(format_matchers.uuid)
+      expect("550E8400-E29B-41D4-A716-446655440000").to match(format_matchers.uuid)
+    end
+
+    it "does not match invalid UUIDs" do
+      expect("not-a-uuid").not_to match(format_matchers.uuid)
+      expect("550e8400e29b41d4a716446655440000").not_to match(format_matchers.uuid)
+    end
+  end
 end

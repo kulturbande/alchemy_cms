@@ -344,7 +344,7 @@ module Alchemy
       end
 
       context "with a custom url_path_class" do
-        let(:url_path_class) { Struct.new(:page, :params) { def call = "/bar" } }
+        let(:url_path_class) { Struct.new(:page, :params, :wildcard_params) { def call = "/bar" } }
 
         before do
           described_class.url_path_class = url_path_class
@@ -355,6 +355,14 @@ module Alchemy
         end
 
         it { is_expected.to eq("/bar") }
+      end
+
+      context "with wildcard params" do
+        let(:page) { create(:alchemy_page, page_layout: "blog_post") }
+
+        subject { page.url_path(wildcard_params: {year: 2024, slug: "foo"}) }
+
+        it { is_expected.to eq("/2024/foo") }
       end
     end
 

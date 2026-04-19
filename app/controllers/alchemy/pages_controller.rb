@@ -130,6 +130,15 @@ module Alchemy
       if result
         @page ||= result.page
         params.merge!(result.extracted_params)
+
+        if @page.has_service?
+          begin
+            @service = @page.definition.service.new(@page, params: params)
+            @service.call
+          rescue Alchemy::PageNotFound
+            page_not_found!
+          end
+        end
       end
       Current.page = @page
     end

@@ -96,5 +96,9 @@
   wildcard_url: "foo/bar"
   elements: [article]
 
+- name: with_service
+  service: DummyPageService
+  elements: [article]
+
 - name: <%= 'erb_' + 'layout' %>
   unique: true

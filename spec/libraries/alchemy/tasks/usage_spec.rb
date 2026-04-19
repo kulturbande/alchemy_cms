@@ -67,7 +67,8 @@ RSpec.describe Alchemy::Tasks::Usage do
         {"page_layout" => "readonly", "count" => 0},
         {"page_layout" => "search", "count" => 0},
         {"page_layout" => "static_wildcard", "count" => 0},
-        {"page_layout" => "user_profile", "count" => 0}
+        {"page_layout" => "user_profile", "count" => 0},
+        {"page_layout" => "with_service", "count" => 0}
       ]
     end
   end

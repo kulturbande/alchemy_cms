@@ -170,7 +170,7 @@ module Alchemy
 
         it "returns all non 'layoutpage' page layout names" do
           allow(Site).to receive(:definitions).and_return([])
-          expect(site.page_layout_names).to eq(%w[index readonly standard everything news search contact product_detail user_profile blog_post product_by_slug product_by_sku static_wildcard erb_layout])
+          expect(site.page_layout_names).to eq(%w[index readonly standard everything news search contact product_detail user_profile blog_post product_by_slug product_by_sku static_wildcard with_service erb_layout])
         end
 
         context "when layoutpages are requested" do
@@ -217,7 +217,8 @@ module Alchemy
             "blog_post",
             "product_by_slug",
             "product_by_sku",
-            "static_wildcard"
+            "static_wildcard",
+            "with_service"
           ])
         end
       end

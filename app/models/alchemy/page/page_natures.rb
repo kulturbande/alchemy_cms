@@ -173,6 +173,10 @@ module Alchemy
 
         definition.cache != false && definition.searchresults != true
       end
+
+      def has_service?
+        definition.service.present?
+      end
     end
   end
 end

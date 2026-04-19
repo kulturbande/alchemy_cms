@@ -2004,6 +2004,20 @@ module Alchemy
       end
     end
 
+    describe "#has_service?" do
+      let(:page) { build(:alchemy_page) }
+
+      subject { page.has_service? }
+
+      it { expect(subject).to be_falsey }
+
+      context "when page has a service" do
+        let(:page) { build(:alchemy_page, page_layout: "with_service") }
+
+        it { expect(subject).to be_truthy }
+      end
+    end
+
     describe "#expiration_time" do
       subject { page.expiration_time }
 

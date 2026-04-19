@@ -21,6 +21,7 @@ module Alchemy
     attribute :editable_by
     attribute :hint
     attribute :wildcard_url, Alchemy::WildcardUrlType.new
+    attribute :service, Alchemy::PageServiceType.new
 
     # Needs to be down here in order to have the attribute reader
     # available after the attribute is defined.

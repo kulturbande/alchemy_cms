@@ -21,6 +21,7 @@ module Alchemy
       it { is_expected.to have_key(:editable_by) }
       it { is_expected.to have_key(:hint) }
       it { is_expected.to have_key(:wildcard_url) }
+      it { is_expected.to have_key(:service) }
     end
 
     describe "#blank?" do
